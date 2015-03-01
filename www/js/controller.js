@@ -23,10 +23,17 @@ function fixRATP(dom, direction) {
 	return [first, next];
 }
 
-function parseHTML(html, direction) {
+function getDOM(html) {
 
 	var dom = document.implementation.createHTMLDocument("");
 	dom.documentElement.innerHTML = html; 
+
+  return dom;
+}
+
+function parseHTML(html, direction) {
+
+	var dom = getDOM(html);
 
 	return fixRATP(dom, direction);
 }
@@ -95,98 +102,150 @@ function process(stations, $scope, $http, $q) {
 
 souritpControllers.controller('WelcomeCtrl', ['$scope',
 		function ($scope) {
+      $scope.routes = JSON.parse(localStorage.getItem('routes'));
 		}]);
 
-souritpControllers.controller('HomeWorkCtrl', ['$scope', '$http', '$q', '$route',
-		function ($scope, $http, $q, $route) {
+souritpControllers.controller('ShowRouteCtrl', ['$scope', '$http', '$q', '$route', '$routeParams',
+		function ($scope, $http, $q, $route, $routeParams) {
+
+      routes = JSON.parse(localStorage.getItem('routes'))
+
+      route = null;
+
+      for(i = 0; i < routes.length; i++) {
+        if (routes[i].id == $routeParams.RouteID) {
+          route = routes[i]
+          break;
+        }
+      }
+
+      console.log(route);
 
 			stations = [];
 
-			stations.push(["179", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B179&stationid=179_5439_5448', 1]);
-			stations.push(["390", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B390&stationid=390_4910_4978', 1]);
-			stations.push(["395", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B395&stationid=395_4953_4954', 0]);
-			
+      for(i = 0; i < route.pickups.length; i++) {
+        pickup = route.pickups[i]
+        stations.push([pickup.line, 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B'+pickup.line+'&stationid='+pickup.station, pickup.terminus]);
+		  }
+
 			process(stations, $scope, $http, $q);
 
-			$scope.title = "Maison > Travail";
+			$scope.title = route.name;
 			$scope.last_update = "--:--";
 			$scope.reload = $route.reload;
 		}]);
 
-souritpControllers.controller('WorkHomeCtrl', ['$scope', '$http', '$q', '$route',
-		function ($scope, $http, $q, $route) {
+souritpControllers.controller('AddRouteCtrl', ['$scope', '$http', '$location',
+		function ($scope, $http, $location) {
 
-			stations = [];
+      $scope.pickups = []
+      $scope.terminuses = []
 
-			stations.push(["595", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B595&stationid=595_5131', 0]);
-			stations.push(["395", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B395&stationid=395_4934_4935', 1]);
-			stations.push(["179", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B179&stationid=179_5439_5448', 0]);
-			
-			process(stations, $scope, $http, $q);
+      $scope.save = function() {
 
-			$scope.title = "Travail > Maison";
-			$scope.last_update = "--:--";
-			$scope.reload = $route.reload;
+        routes = JSON.parse(localStorage.getItem('routes'))
+
+        if (routes == null) {
+          routes = []
+        }
+
+
+        pickups = []
+
+        for (i = 0; i < $scope.pickups.length; i++) {
+
+          pickups.push({
+            line: $scope.pickups[i].line,
+            station: $scope.pickups[i].station.id,
+            terminus: $scope.pickups[i].terminus.id
+          });
+
+        }
+    
+        routes.push({
+          id: Date.now(),
+          name: $scope.name,
+          pickups: pickups
+        });
+
+        console.log(JSON.stringify(routes))
+
+        localStorage.setItem('routes', JSON.stringify(routes));
+
+        $location.path('/')
+
+      }
+
+      $scope.updateTerminuses = function(index) {
+
+        $http.get('http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B'+$scope.pickups[index].line+'&stationid='+$scope.pickups[index].station.id).
+            success(function(data, status, headers, config) {
+              dom = getDOM(data)
+
+              terminuses = dom.getElementsByClassName('subtitle');
+
+              if (terminuses[2]) {
+                $scope.pickups[index].terminuses.push({
+                  id: 0,
+                  name: terminuses[2].innerText
+                });
+              }
+              if (terminuses[3]) {
+                $scope.pickups[index].terminuses.push({
+                  id: 1,
+                  name: terminuses[3].innerText
+                });
+              }
+
+            })
+
+      }
+
+      $scope.updateStations = function(index) {
+
+        $http.get('http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B'+$scope.pickups[index].line+'&referer=station&stationname=*').
+            success(function(data, status, headers, config) {
+
+              $scope.pickups[index].stations = []
+
+              dom = getDOM(data)
+              
+              bg1 = dom.getElementsByClassName('bg1');
+
+              for (i = 0; i < bg1.length; i++) {
+
+                a = bg1[i].getElementsByTagName('a')[0]
+
+                href = a.getAttribute('href')
+
+                $scope.pickups[index].stations.push({
+                    id: href.substr(href.lastIndexOf('=') + 1),
+                    name: a.innerText
+                });
+
+              }
+
+            })
+
+      }
+
+      $scope.removePickup = function(index) {
+      
+        $scope.pickups.splice(index, 1);
+
+      }
+
+      $scope.addPickup = function() {
+
+        $scope.pickups.push({
+          line: '',
+          stations: [],
+          station: '',
+          terminuses: [],
+          terminus: ''
+        });
+
+      }
+
 		}]);
 
-souritpControllers.controller('HomeTownCtrl', ['$scope', '$http', '$q', '$route',
-		function ($scope, $http, $q, $route) {
-
-			stations = [];
-
-			stations.push(["390", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B390&stationid=390_4910_4978', 1]);
-			stations.push(["395", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B395&stationid=395_4953_4954', 0]);
-			
-			process(stations, $scope, $http, $q);
-
-			$scope.title = "Maison > Coeur de ville";
-			$scope.last_update = "--:--";
-			$scope.reload = $route.reload;
-		}]);
-
-souritpControllers.controller('TownHomeCtrl', ['$scope', '$http', '$q', '$route',
-		function ($scope, $http, $q, $route) {
-
-			stations = [];
-
-			stations.push(["390", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B390&stationid=390_4912_4980', 0]);
-			stations.push(["395", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B395&stationid=395_4949_4950', 1]);
-			
-			process(stations, $scope, $http, $q);
-
-			$scope.title = "Coeur de ville > Maison";
-			$scope.last_update = "--:--";
-			$scope.reload = $route.reload;
-		}]);
-
-souritpControllers.controller('HomeRERCtrl', ['$scope', '$http', '$q', '$route',
-		function ($scope, $http, $q, $route) {
-
-			stations = [];
-
-			stations.push(["390", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B390&stationid=390_4910_4978', 0]);
-			stations.push(["395", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B395&stationid=395_4953_4954', 1]);
-			stations.push(["179", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B179&stationid=179_5439_5448', 0]);
-			
-			process(stations, $scope, $http, $q);
-
-			$scope.title = "Maison > RER";
-			$scope.last_update = "--:--";
-			$scope.reload = $route.reload;
-		}]);
-
-souritpControllers.controller('RERHomeCtrl', ['$scope', '$http', '$q', '$route',
-		function ($scope, $http, $q, $route) {
-
-			stations = [];
-
-			stations.push(["179", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B179&stationid=179_5446', 0]);
-			stations.push(["390", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B390&stationid=390_4907_4975', 1]);
-			stations.push(["395", 'http://wap.ratp.fr/siv/schedule?service=next&reseau=bus&lineid=B395&stationid=395_4080_4892', 0]);
-			
-			process(stations, $scope, $http, $q);
-
-			$scope.title = "RER > Maison";
-			$scope.last_update = "--:--";
-			$scope.reload = $route.reload;
-		}]);

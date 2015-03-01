@@ -6,12 +6,9 @@
 <div class="content">
 	<div class="content-padded">
 
-		<a href="#/HomeWork" class="btn btn-block"><span class="icon icon-home"></span> Maison > Travail</a>
-		<a href="#/WorkHome" class="btn btn-block">Travail > <span class="icon icon-home"></span> Maison</a>
-		<a href="#/HomeTown" class="btn btn-block"><span class="icon icon-home"></span> Maison > Coeur de ville</a>
-		<a href="#/HomeTown" class="btn btn-block">Coeur de ville > <span class="icon icon-home"></span> Maison</a>
-		<a href="#/HomeRER" class="btn btn-block"><span class="icon icon-home"></span> Maison > RER</a>
-		<a href="#/RERHome" class="btn btn-block">RER > <span class="icon icon-home"></span> Maison</a>
+    <a ng-href="#/ShowRoute/{{route.id}}" class="btn btn-block" ng-repeat="route in routes">{{route.name}}</a>
+    <hr/>
+		<a href="#/AddRoute" class="btn btn-block">Ajouter</a>
 
 	</div>
 </div>

@@ -10,29 +10,13 @@ souritpApp.config(['$routeProvider',
         templateUrl: 'partials/welcome.html',
         controller: 'WelcomeCtrl'
       }).
-      when('/HomeWork', {
+      when('/ShowRoute/:RouteID', {
         templateUrl: 'partials/timetable.html',
-        controller: 'HomeWorkCtrl'
+        controller: 'ShowRouteCtrl'
       }).
-      when('/WorkHome', {
-        templateUrl: 'partials/timetable.html',
-        controller: 'WorkHomeCtrl'
-      }).
-      when('/HomeTown', {
-        templateUrl: 'partials/timetable.html',
-        controller: 'HomeTownCtrl'
-      }).
-      when('/TownHome', {
-        templateUrl: 'partials/timetable.html',
-        controller: 'TownHomeCtrl'
-      }).
-      when('/HomeRER', {
-        templateUrl: 'partials/timetable.html',
-        controller: 'HomeRERCtrl'
-      }).
-      when('/RERHome', {
-        templateUrl: 'partials/timetable.html',
-        controller: 'RERHomeCtrl'
+      when('/AddRoute', {
+        templateUrl: 'partials/add_route.html',
+        controller: 'AddRouteCtrl'
       }).
       otherwise({
         redirectTo: '/welcome'
