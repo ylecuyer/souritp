@@ -11,7 +11,8 @@
 
 <div class="content">
 	<ul class="table-view" style="margin-top: 0px">
-		<li class="table-view-divider" style="padding-top: 6px">{{title}}</li>
+		<li class="table-view-divider" style="padding-top: 6px">{{title}}
+      <span ng-click="trash()" class="icon icon-trash" style="font-size: 12px; float: right; padding-top:5px; padding-right:7px"></span></li>
 		<li class="table-view-cell media" ng-repeat="bus in buses">
 			<a class="navigate-right">
 				<img class="media-object pull-left" style="margin-top:4px" ng-src="img/b{{bus[0]}}.gif">

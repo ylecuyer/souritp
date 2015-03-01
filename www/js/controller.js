@@ -105,10 +105,25 @@ souritpControllers.controller('WelcomeCtrl', ['$scope',
       $scope.routes = JSON.parse(localStorage.getItem('routes'));
 		}]);
 
-souritpControllers.controller('ShowRouteCtrl', ['$scope', '$http', '$q', '$route', '$routeParams',
-		function ($scope, $http, $q, $route, $routeParams) {
+souritpControllers.controller('ShowRouteCtrl', ['$scope', '$http', '$q', '$route', '$routeParams', '$location',
+		function ($scope, $http, $q, $route, $routeParams, $location) {
 
       routes = JSON.parse(localStorage.getItem('routes'))
+
+
+      $scope.trash = function() {
+
+        for(i = 0; i < routes.length; i++) {
+          if (routes[i].id == $routeParams.RouteID) {
+            routes.splice(i, 1);
+            break;
+          }
+        }
+
+        localStorage.setItem('routes', JSON.stringify(routes));
+
+        $location.path('/')
+      }
 
       route = null;
 
