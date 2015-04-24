@@ -50,6 +50,16 @@ function compareBuses(a, b) {
 	if (bsa)
 		return 1;
 
+	apa = (a[1].indexOf("A l'approche") == 0);
+	bpa = (b[1].indexOf("A l'approche") == 0);
+
+	if (apa && bpa)
+		return 0;
+	if (apa)
+		return -1;
+	if (bpa)
+		return 1;
+
 	aa = parseInt(a[1]);
 	bb = parseInt(b[1]);
 
